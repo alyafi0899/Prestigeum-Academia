@@ -1,0 +1,10 @@
+{
+  "description": "This interactive web application features a slideable hero section, enhancing user engagement and providing a visually appealing way to showcase content.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
