@@ -1,0 +1,26 @@
+# Task Management
+
+- [/] Analyze existing project and plan dynamic transition
+    - [x] Research existing components and data structures
+    - [x] Define dynamic features and data schema
+    - [/] Create implementation plan
+- [ ] Implement Core Database/Service Layer
+    - [ ] Create `DataService` for persistence (localStorage/IndexedDB)
+    - [ ] Migrate `mockData.ts` to initial database state
+- [ ] Update Authentication & Authorization
+    - [ ] Implement real registration and login persistence
+    - [ ] Update `AuthContext` to use `DataService`
+    - [ ] Protect routes (Admin and Dashboard)
+- [ ] Implement Training & Registration Logic
+    - [ ] Update `Register.tsx` to save registrations and update seats
+    - [ ] Implement Admin "Create/Edit Event" persistence
+- [ ] Implement Attendance & Certificate System
+    - [ ] Update `Dashboard.tsx` to save attendance and signature
+    - [ ] Implement Admin Certificate issuance logic
+    - [ ] Implement Certificate verification logic
+- [ ] Implement Article & Gallery Management
+    - [ ] Admin CRUD for articles and gallery
+- [ ] Verification and Testing
+    - [ ] Verify user flow (Participant)
+    - [ ] Verify admin flow
+    - [ ] Verify data persistence across reloads
