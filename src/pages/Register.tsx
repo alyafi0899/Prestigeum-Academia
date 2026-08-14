@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router'
-import { trainings } from '../data/mockData'
 import { useAuth } from '../context/AuthContext'
+import { dataService } from '../data/dataService'
 
 const STEP_TITLES = [
   'Training Information',
@@ -20,13 +20,14 @@ export default function Register() {
   const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const training = trainings.find((t) => t.id === id)
+  const [training, setTraining] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
-    whatsapp: '',
+    whatsapp: user?.wa_number || '',
     city: '',
     institution: '',
     jobTitle: '',
@@ -41,6 +42,16 @@ export default function Register() {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  useEffect(() => {
+    if (id) {
+      dataService.getTrainingById(id)
+        .then(setTraining)
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    }
+  }, [id])
+
+  if (loading) return <div className="p-10 text-center">Loading training details...</div>
   if (!training) return <div className="p-10 text-center">Training not found. <Link to="/training" className="text-[#A577D5]">Go back</Link></div>
 
   const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
@@ -65,10 +76,28 @@ export default function Register() {
     return Object.keys(e).length === 0
   }
 
-  const next = () => {
+  const next = async () => {
     if (!validate()) return
-    if (step < 5) setStep((s) => s + 1)
-    else navigate(`/training/${id}/register/success`, { state: { form, training } })
+    if (step < 5) {
+      setStep((s) => s + 1)
+    } else {
+      if (!user) {
+        navigate('/login', { state: { from: window.location.pathname } })
+        return
+      }
+
+      try {
+        await dataService.createRegistration({
+          user_id: user.id,
+          training_id: training.id,
+          status: 'Registered'
+        })
+        navigate(`/training/${id}/register/success`, { state: { form, training } })
+      } catch (err) {
+        console.error('Registration failed:', err)
+        setErrors({ submit: 'Failed to submit registration. Please try again.' })
+      }
+    }
   }
 
   const inputClass = (field: string) =>
@@ -116,7 +145,7 @@ export default function Register() {
                 </div>
                 <div className="bg-[#F2EFFD] rounded-2xl p-5 mb-5">
                   <div className="relative h-36 rounded-xl overflow-hidden mb-4">
-                    <img src={training.image} alt={training.title} className="w-full h-full object-cover" />
+                    <img src={training.image_url} alt={training.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#2F2454]/60 to-transparent" />
                     <span className="absolute bottom-3 left-3 bg-[#A577D5] text-white text-xs font-semibold px-2.5 py-1 rounded-full">{training.category}</span>
                   </div>

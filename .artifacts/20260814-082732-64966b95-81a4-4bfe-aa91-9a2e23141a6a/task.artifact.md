@@ -1,26 +1,32 @@
 # Task Management
 
-- [/] Analyze existing project and plan dynamic transition
+- [x] Analyze existing project and plan dynamic transition
     - [x] Research existing components and data structures
     - [x] Define dynamic features and data schema
-    - [/] Create implementation plan
-- [ ] Implement Core Database/Service Layer
-    - [ ] Create `DataService` for persistence (localStorage/IndexedDB)
-    - [ ] Migrate `mockData.ts` to initial database state
-- [ ] Update Authentication & Authorization
-    - [ ] Implement real registration and login persistence
-    - [ ] Update `AuthContext` to use `DataService`
-    - [ ] Protect routes (Admin and Dashboard)
-- [ ] Implement Training & Registration Logic
-    - [ ] Update `Register.tsx` to save registrations and update seats
-    - [ ] Implement Admin "Create/Edit Event" persistence
-- [ ] Implement Attendance & Certificate System
-    - [ ] Update `Dashboard.tsx` to save attendance and signature
-    - [ ] Implement Admin Certificate issuance logic
-    - [ ] Implement Certificate verification logic
-- [ ] Implement Article & Gallery Management
-    - [ ] Admin CRUD for articles and gallery
-- [ ] Verification and Testing
-    - [ ] Verify user flow (Participant)
-    - [ ] Verify admin flow
-    - [ ] Verify data persistence across reloads
+    - [x] Create implementation plan (Supabase focus)
+- [x] Setup Supabase Infrastructure
+    - [x] Create `.env` file with Supabase credentials
+    - [x] Install `@supabase/supabase-js`
+    - [x] Initialize `supabaseClient.ts`
+    - [x] Create SQL migration script for `pa_` tables
+- [x] Implement Core Database/Service Layer
+    - [x] Create `DataService` for Supabase persistence
+    - [x] Populate initial data from `mockData.ts` into Supabase (SQL Provided)
+- [x] Update Authentication & Authorization
+    - [x] Implement Supabase Auth (Register/Login)
+    - [x] Update `AuthContext` to use Supabase sessions
+    - [x] Create `pa_profiles` table logic
+- [x] Implement Training & Registration Logic
+    - [x] Update `Register.tsx` to save to `pa_registrations`
+    - [x] Implement seat deduction logic in Supabase (Function provided)
+    - [x] Implement Admin "Create/Edit Event" persistence
+- [x] Implement Attendance & Certificate System
+    - [x] Update `Dashboard.tsx` to save attendance to Supabase
+    - [x] Implement Admin Certificate issuance logic (`pa_certificates`)
+    - [x] Implement Certificate verification logic
+- [x] Implement Article & Gallery Management
+    - [x] Connect Articles and Gallery to Supabase
+- [x] Verification and Testing
+    - [x] Verify user flow (Participant)
+    - [x] Verify admin flow
+    - [x] Verify data persistence across reloads

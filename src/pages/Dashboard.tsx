@@ -1,22 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
-import { trainings } from '../data/mockData'
-
-const MY_TRAININGS = [
-  { ...trainings[0], regStatus: 'Confirmed', attendStatus: 'Open', hasCert: false, certAvailable: false },
-  { ...trainings[3], regStatus: 'Registered', attendStatus: 'Pending', hasCert: false, certAvailable: false },
-  { ...trainings[1], regStatus: 'Completed', attendStatus: 'Attended', hasCert: true, certAvailable: true },
-]
-
-const CERT_ID = 'PA-CERT-2026-00142'
+import { dataService } from '../data/dataService'
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState('upcoming')
+  const [registrations, setRegistrations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeReg, setActiveReg] = useState<any>(null)
   const [showAttend, setShowAttend] = useState(false)
   const [showCert, setShowCert] = useState(false)
+  const [selectedCert, setSelectedCert] = useState<any>(null)
   const [attended, setAttended] = useState(false)
   const [signed, setSigned] = useState(false)
   const [consent, setConsent] = useState(false)
@@ -25,9 +21,32 @@ export default function Dashboard() {
   const [hasDrawn, setHasDrawn] = useState(false)
 
   useEffect(() => {
-    if (!user) navigate('/login')
-  }, [user, navigate])
+    if (!authLoading && !user) navigate('/login')
+  }, [user, authLoading, navigate])
 
+  useEffect(() => {
+    if (user) {
+      loadData()
+    }
+  }, [user])
+
+  const loadData = async () => {
+    try {
+      const data = await dataService.getRegistrations(user!.id)
+      setRegistrations(data)
+
+      // Look for any "Open" attendance (mocking logic: if status is Confirmed and not yet Attended)
+      const open = data.find((r: any) => r.status === 'Confirmed' && r.attendance_status === 'Pending')
+      if (open) setActiveReg(open)
+
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (authLoading || loading) return <div className="p-10 text-center">Loading dashboard...</div>
   if (!user) return null
 
   // Signature pad logic
@@ -61,15 +80,15 @@ export default function Dashboard() {
   }
 
   const stats = [
-    { label: 'Registered Trainings', value: 3, color: 'bg-[#F2EFFD] text-[#2F2454]', icon: '📋' },
-    { label: 'Upcoming Trainings', value: 2, color: 'bg-blue-50 text-blue-700', icon: '📅' },
-    { label: 'Completed Trainings', value: 1, color: 'bg-green-50 text-green-700', icon: '✅' },
-    { label: 'Certificates', value: 1, color: 'bg-yellow-50 text-yellow-700', icon: '🏆' },
+    { label: 'Registered', value: registrations.length, color: 'bg-[#F2EFFD] text-[#2F2454]', icon: '📋' },
+    { label: 'Upcoming', value: registrations.filter(r => r.status !== 'Completed').length, color: 'bg-blue-50 text-blue-700', icon: '📅' },
+    { label: 'Completed', value: registrations.filter(r => r.status === 'Completed').length, color: 'bg-green-50 text-green-700', icon: '✅' },
+    { label: 'Certificates', value: registrations.filter(r => r.attendance_status === 'Attended').length, color: 'bg-yellow-50 text-yellow-700', icon: '🏆' },
   ]
 
-  const filtered = MY_TRAININGS.filter((t) => {
-    if (tab === 'upcoming') return t.regStatus !== 'Completed'
-    if (tab === 'completed') return t.regStatus === 'Completed'
+  const filtered = registrations.filter((r) => {
+    if (tab === 'upcoming') return r.status !== 'Completed'
+    if (tab === 'completed') return r.status === 'Completed'
     return true
   })
 
@@ -102,13 +121,13 @@ export default function Dashboard() {
         </div>
 
         {/* Attendance alert */}
-        {!attended && (
+        {activeReg && !attended && (
           <div className="bg-white rounded-2xl border border-orange-200 p-5 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xl">🎯</div>
               <div>
-                <p className="font-bold text-gray-800 text-sm">Attendance Open — QA/QC Training</p>
-                <p className="text-xs text-gray-500 mt-0.5">August 23, 2026 · Check-in closes at 09:00 WIB</p>
+                <p className="font-bold text-gray-800 text-sm">Attendance Open — {activeReg.pa_trainings.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{activeReg.pa_trainings.date} · Check-in available now</p>
               </div>
             </div>
             <button onClick={() => setShowAttend(true)} className="bg-[#2F2454] text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-[#A577D5] transition-all">
@@ -117,16 +136,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        {attended && (
+        {attended && activeReg && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-xl">✅</div>
             <div className="flex-1">
-              <p className="font-bold text-green-800 text-sm">Attendance Recorded — QA/QC Training</p>
-              <p className="text-xs text-green-600 mt-0.5">Your certificate will be available shortly.</p>
+              <p className="font-bold text-green-800 text-sm">Attendance Recorded — {activeReg.pa_trainings.title}</p>
+              <p className="text-xs text-green-600 mt-0.5">Your certificate will be available once processed by admin.</p>
             </div>
-            <button onClick={() => setShowCert(true)} className="bg-green-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-green-700 transition-all">
-              View Certificate
-            </button>
           </div>
         )}
 
@@ -144,25 +160,25 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="divide-y divide-gray-50">
-            {filtered.map((t) => (
-              <div key={t.id} className="px-6 py-5 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+            {filtered.map((r) => (
+              <div key={r.id} className="px-6 py-5 flex items-center gap-4 hover:bg-gray-50 transition-colors">
                 <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                  <img src={t.image} alt={t.title} className="w-full h-full object-cover" />
+                  <img src={r.pa_trainings.image_url} alt={r.pa_trainings.title} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm truncate">{t.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{t.date} · {t.format}</p>
+                  <p className="font-semibold text-gray-800 text-sm truncate">{r.pa_trainings.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{r.pa_trainings.date} · {r.pa_trainings.format}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <StatusBadge label={t.regStatus} />
-                    {t.attendStatus !== 'Pending' && <StatusBadge label={t.attendStatus} />}
+                    <StatusBadge label={r.status} />
+                    {r.attendance_status !== 'Pending' && <StatusBadge label={r.attendance_status} />}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
-                  <Link to={`/training/${t.id}`} className="text-xs font-semibold text-[#A577D5] border border-[#DBCDFD] px-3 py-1.5 rounded-lg hover:bg-[#F2EFFD] transition-all">
+                  <Link to={`/training/${r.pa_trainings.id}`} className="text-xs font-semibold text-[#A577D5] border border-[#DBCDFD] px-3 py-1.5 rounded-lg hover:bg-[#F2EFFD] transition-all">
                     Open Training
                   </Link>
-                  {t.certAvailable && (
-                    <button onClick={() => setShowCert(true)} className="text-xs font-semibold text-white bg-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-all">
+                  {r.status === 'Completed' && (
+                    <button onClick={() => { setSelectedCert(r); setShowCert(true) }} className="text-xs font-semibold text-white bg-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-all">
                       View Certificate
                     </button>
                   )}
@@ -174,18 +190,18 @@ export default function Dashboard() {
       </div>
 
       {/* Attendance Modal */}
-      {showAttend && !attended && (
+      {showAttend && !attended && activeReg && (
         <Modal onClose={() => setShowAttend(false)}>
           <div className="p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl bg-[#2F2454] text-white flex items-center justify-center font-bold text-sm">✓</div>
               <div>
                 <h3 className="font-bold text-[#2F2454]">Training Attendance</h3>
-                <p className="text-xs text-gray-500">Project Quality Management Training</p>
+                <p className="text-xs text-gray-500">{activeReg.pa_trainings.title}</p>
               </div>
             </div>
             <div className="bg-[#F2EFFD] rounded-xl p-4 mb-5 space-y-1.5">
-              {[['Participant', user.name], ['Date', 'August 23, 2026'], ['Status', 'Attendance Open 🟢']].map(([l, v]) => (
+              {[['Participant', user.name], ['Date', activeReg.pa_trainings.date], ['Status', 'Attendance Open 🟢']].map(([l, v]) => (
                 <div key={l as string} className="flex justify-between text-sm">
                   <span className="text-gray-400 text-xs">{l as string}</span>
                   <span className="text-xs font-semibold text-gray-800">{v}</span>
@@ -206,13 +222,25 @@ export default function Dashboard() {
               <span className="text-xs text-gray-600">I confirm that I attended this training.</span>
             </label>
             {!signed ? (
-              <button onClick={() => { if (hasDrawn && consent) setSigned(true) }}
+              <button onClick={async () => {
+                if (hasDrawn && consent) {
+                  try {
+                    await dataService.updateRegistration(activeReg.id, {
+                      attendance_status: 'Attended',
+                      check_in_time: new Date().toISOString()
+                    })
+                    setSigned(true)
+                  } catch (err) {
+                    console.error(err)
+                  }
+                }
+              }}
                 disabled={!hasDrawn || !consent}
                 className="w-full bg-[#2F2454] text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-40 hover:bg-[#A577D5] transition-all">
                 Submit Attendance
               </button>
             ) : (
-              <button onClick={() => { setAttended(true); setShowAttend(false) }}
+              <button onClick={() => { setAttended(true); setShowAttend(false); loadData(); }}
                 className="w-full bg-green-600 text-white font-semibold py-3 rounded-xl text-sm hover:bg-green-700 transition-all">
                 ✓ Attendance Confirmed — Done
               </button>
@@ -222,7 +250,7 @@ export default function Dashboard() {
       )}
 
       {/* Certificate Modal */}
-      {showCert && (
+      {showCert && selectedCert && (
         <Modal onClose={() => setShowCert(false)}>
           <div className="p-6">
             <h3 className="font-bold text-[#2F2454] text-base mb-4">Certificate Preview</h3>
@@ -240,9 +268,9 @@ export default function Dashboard() {
               <p className="text-gray-500 text-xs mb-3">This is to certify that</p>
               <p className="text-[#2F2454] text-2xl font-bold mb-3">{user.name}</p>
               <p className="text-gray-500 text-xs mb-1">has successfully completed</p>
-              <p className="text-[#2F2454] font-bold text-base mb-4">Structural Analysis for Civil Engineers</p>
+              <p className="text-[#2F2454] font-bold text-base mb-4">{selectedCert.pa_trainings.title}</p>
               <div className="grid grid-cols-3 gap-3 mb-4">
-                {[['Date', 'September 7, 2026'], ['Duration', '18 Hours'], ['Instructor', 'Dr. Hendra Wijaya']].map(([l, v]) => (
+                {[['Date', selectedCert.pa_trainings.date], ['Duration', selectedCert.pa_trainings.duration], ['Instructor', selectedCert.pa_trainings.instructor.split(',')[0]]].map(([l, v]) => (
                   <div key={l as string} className="bg-white/70 rounded-xl p-2">
                     <p className="text-gray-400 text-[10px]">{l as string}</p>
                     <p className="text-gray-700 text-[10px] font-bold">{v}</p>
@@ -250,8 +278,8 @@ export default function Dashboard() {
                 ))}
               </div>
               <div className="border-t border-[#DBCDFD] pt-3">
-                <p className="text-[10px] text-gray-400">Certificate ID: {CERT_ID}</p>
-                <p className="text-[10px] text-gray-400">Issued: August 12, 2026</p>
+                <p className="text-[10px] text-gray-400">Certificate ID: PA-CERT-2026-{selectedCert.id.slice(0, 5)}</p>
+                <p className="text-[10px] text-gray-400">Issued: {new Date().toLocaleDateString()}</p>
               </div>
             </div>
             <div className="flex gap-3 mt-4">

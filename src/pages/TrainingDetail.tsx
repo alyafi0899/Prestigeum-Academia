@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router'
-import { trainings, instructors } from '../data/mockData'
 import { useAuth } from '../context/AuthContext'
+import { dataService } from '../data/dataService'
 
 export default function TrainingDetail() {
   const { id } = useParams()
@@ -9,8 +9,20 @@ export default function TrainingDetail() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [openModule, setOpenModule] = useState<number | null>(0)
+  const [training, setTraining] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const training = trainings.find((t) => t.id === id)
+  useEffect(() => {
+    if (id) {
+      dataService.getTrainingById(id)
+        .then(setTraining)
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    }
+  }, [id])
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading details...</div>
+
   if (!training) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -21,8 +33,7 @@ export default function TrainingDetail() {
     </div>
   )
 
-  const instructor = instructors[0]
-  const pct = Math.round(((training.seats - training.seatsLeft) / training.seats) * 100)
+  const pct = training.seats > 0 ? Math.round(((training.seats - training.seats_left) / training.seats) * 100) : 0
   const levelColor: Record<string, string> = { Beginner: 'bg-green-100 text-green-700', Intermediate: 'bg-yellow-100 text-yellow-700', Advanced: 'bg-red-100 text-red-700' }
 
   const handleRegister = () => {
@@ -34,7 +45,7 @@ export default function TrainingDetail() {
     <div className="bg-gray-50 min-h-screen">
       {/* Hero */}
       <div className="relative h-72 md:h-96 overflow-hidden">
-        <img src={training.image} alt={training.title} className="w-full h-full object-cover" />
+        <img src={training.image_url} alt={training.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(47,36,84,0.5) 0%, rgba(47,36,84,0.85) 100%)' }} />
         <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-16 pb-8">
           <div className="max-w-4xl">
@@ -44,7 +55,7 @@ export default function TrainingDetail() {
               <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">{training.format}</span>
             </div>
             <h1 className="text-white text-2xl md:text-4xl font-bold mb-2 leading-tight">{training.title}</h1>
-            <p className="text-white/75 text-sm max-w-2xl">{training.shortDesc}</p>
+            <p className="text-white/75 text-sm max-w-2xl">{training.short_desc}</p>
           </div>
         </div>
       </div>
@@ -130,15 +141,14 @@ export default function TrainingDetail() {
               <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-[#2F2454] text-lg mb-5">Meet Your Instructor</h3>
                 <div className="flex flex-col md:flex-row gap-5">
-                  <img src={instructor.image} alt={instructor.name} className="w-24 h-24 rounded-2xl object-cover shrink-0" />
+                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=400" alt={training.instructor} className="w-24 h-24 rounded-2xl object-cover shrink-0" />
                   <div>
                     <p className="font-bold text-[#2F2454] text-base">{training.instructor}</p>
-                    <p className="text-[#A577D5] text-sm font-medium">{training.instructorTitle}</p>
+                    <p className="text-[#A577D5] text-sm font-medium">{training.instructor_title}</p>
                     <div className="flex flex-wrap gap-3 mt-3">
-                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">{instructor.specialization}</span>
-                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">{instructor.experience} Experience</span>
+                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">Engineering Specialist</span>
+                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">15+ Years Experience</span>
                     </div>
-                    <p className="text-gray-600 text-sm leading-relaxed mt-4">{instructor.bio}</p>
                   </div>
                 </div>
               </div>
@@ -150,14 +160,14 @@ export default function TrainingDetail() {
             {/* Registration card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm sticky top-24">
               <div className="text-2xl font-bold text-[#2F2454] mb-1">
-                {training.price === 'Free' ? <span className="text-green-600">Free</span> : `Rp ${(training.price as number).toLocaleString('id-ID')}`}
+                {training.price === 'Free' ? <span className="text-green-600">Free</span> : `Rp ${Number(training.price).toLocaleString('id-ID')}`}
               </div>
               <p className="text-xs text-gray-400 mb-5">per participant</p>
 
               {/* Seats progress */}
               <div className="mb-5">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-gray-500">{training.seatsLeft} seats remaining</span>
+                  <span className="text-gray-500">{training.seats_left} seats remaining</span>
                   <span className="font-semibold text-[#2F2454]">{pct}% filled</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -166,8 +176,9 @@ export default function TrainingDetail() {
               </div>
 
               <button onClick={handleRegister}
-                className="w-full bg-[#2F2454] text-white font-semibold py-3.5 rounded-xl hover:bg-[#A577D5] transition-all text-sm mb-3">
-                Register for Training
+                disabled={training.seats_left <= 0}
+                className="w-full bg-[#2F2454] text-white font-semibold py-3.5 rounded-xl hover:bg-[#A577D5] transition-all text-sm mb-3 disabled:opacity-50">
+                {training.seats_left > 0 ? 'Register for Training' : 'Sold Out'}
               </button>
               <p className="text-center text-xs text-gray-400">Deadline: {training.deadline}</p>
 
@@ -180,7 +191,7 @@ export default function TrainingDetail() {
                   ['Language', training.language],
                   ['Certificate', 'Available'],
                   ['Materials', 'Included'],
-                  ['Max Participants', `${training.maxParticipants} Participants`],
+                  ['Max Participants', `${training.max_participants} Participants`],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-start justify-between gap-4">
                     <span className="text-xs text-gray-400 shrink-0">{label}</span>

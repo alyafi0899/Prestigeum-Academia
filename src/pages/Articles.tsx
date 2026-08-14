@@ -1,11 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
-import { articles } from '../data/mockData'
+import { dataService } from '../data/dataService'
 
 const CATEGORIES = ['All', 'Engineering', 'QA/QC', 'Project Management', 'HSE', 'Career', 'Industry', 'Technology']
 
 export default function Articles() {
   const [cat, setCat] = useState('All')
+  const [articles, setArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    dataService.getArticles()
+      .then(setArticles)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
   const filtered = cat === 'All' ? articles : articles.filter((a) => a.category === cat)
 
   return (
@@ -30,11 +40,13 @@ export default function Articles() {
         </div>
 
         {/* Featured (first) */}
-        {filtered[0] && (
+        {loading ? (
+          <div className="text-center py-20 text-gray-400">Loading articles...</div>
+        ) : filtered[0] ? (
           <Link to={`/articles/${filtered[0].id}`} className="block mb-8 group">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden md:flex hover:shadow-xl transition-all duration-300">
               <div className="md:w-96 h-56 md:h-auto relative overflow-hidden shrink-0">
-                <img src={filtered[0].image} alt={filtered[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={filtered[0].image_url} alt={filtered[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
                 <span className="absolute top-4 left-4 bg-[#A577D5] text-white text-xs font-semibold px-3 py-1 rounded-full">{filtered[0].category}</span>
                 <span className="absolute top-4 right-4 bg-white/90 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">Featured</span>
@@ -45,21 +57,21 @@ export default function Articles() {
                 <div className="flex items-center gap-4 text-xs text-gray-400">
                   <span className="font-medium text-gray-600">{filtered[0].author}</span>
                   <span>·</span>
-                  <span>{filtered[0].date}</span>
+                  <span>{new Date(filtered[0].published_at).toLocaleDateString()}</span>
                   <span>·</span>
-                  <span>{filtered[0].readTime}</span>
+                  <span>{filtered[0].read_time}</span>
                 </div>
               </div>
             </div>
           </Link>
-        )}
+        ) : null}
 
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.slice(1).map((a) => (
             <Link to={`/articles/${a.id}`} key={a.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col">
               <div className="h-48 relative overflow-hidden">
-                <img src={a.image} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={a.image_url} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <span className="absolute top-3 left-3 bg-[#2F2454] text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">{a.category}</span>
               </div>
               <div className="p-5 flex flex-col flex-1">
@@ -67,7 +79,7 @@ export default function Articles() {
                 <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-3 flex-1">{a.excerpt}</p>
                 <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-3">
                   <span className="font-medium text-gray-600">{a.author}</span>
-                  <span>{a.readTime}</span>
+                  <span>{a.read_time}</span>
                 </div>
               </div>
             </Link>

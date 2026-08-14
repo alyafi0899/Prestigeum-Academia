@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 type View = 'login' | 'register' | 'forgot'
 
 export default function Login() {
-  const { login, register } = useAuth()
+  const { login, register, forgotPassword } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string })?.from || '/dashboard'
@@ -29,7 +29,7 @@ export default function Login() {
     if (ok) {
       navigate(from, { replace: true })
     } else {
-      setError('Invalid email or password. Try user@demo.com or admin@demo.com')
+      setError('Invalid email or password. Please try again.')
     }
   }
 
@@ -38,17 +38,26 @@ export default function Login() {
     setError('')
     if (password !== confirm) { setError('Passwords do not match'); return }
     setLoading(true)
-    await register(name, email, password)
+    const ok = await register(name, email, password)
     setLoading(false)
-    navigate(from, { replace: true })
+    if (ok) {
+      navigate(from, { replace: true })
+    } else {
+      setError('Registration failed. Email might be already in use.')
+    }
   }
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
+    const ok = await forgotPassword(email)
     setLoading(false)
-    setSuccess('Password reset link has been sent to your email.')
+    if (ok) {
+      setSuccess('Password reset link has been sent to your email.')
+    } else {
+      setError('Failed to send reset link. Please try again.')
+    }
   }
 
   const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#A577D5] focus:ring-2 focus:ring-[#A577D5]/20 transition-all text-gray-800 placeholder-gray-400"
@@ -101,9 +110,6 @@ export default function Login() {
               <>
                 <h1 className="text-2xl font-bold text-[#2F2454] mb-1">Welcome back</h1>
                 <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
-                <div className="bg-[#F2EFFD] rounded-xl p-3 mb-5 text-xs text-[#2F2454]">
-                  <strong>Demo:</strong> user@demo.com or admin@demo.com — any password
-                </div>
                 {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3 mb-4">{error}</div>}
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>

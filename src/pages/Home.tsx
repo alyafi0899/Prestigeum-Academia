@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router'
-import { trainings, type Training } from '../data/mockData'
+import { dataService } from '../data/dataService'
+
+// We will fetch trainings from Supabase
+// const slides and other constants remain the same
 
 const slides = [
   {
@@ -67,6 +70,13 @@ function renderHeadline(text: string, accent: string) {
 export default function Home() {
   const [current, setCurrent] = useState(0)
   const [fading, setFading] = useState(false)
+  const [featured, setFeatured] = useState<any[]>([])
+
+  useEffect(() => {
+    dataService.getTrainings().then(data => {
+      setFeatured(data.slice(0, 3))
+    }).catch(console.error)
+  }, [])
 
   const go = useCallback((index: number) => {
     setFading(true)
@@ -85,7 +95,6 @@ export default function Home() {
   }, [current, next])
 
   const slide = slides[current]
-  const featured = trainings.slice(0, 3)
 
   return (
     <div>
@@ -239,22 +248,22 @@ export default function Home() {
   )
 }
 
-function TrainingCard({ training: t }: { training: Training }) {
+function TrainingCard({ training: t }: { training: any }) {
   const levelColor: Record<string, string> = { Beginner: 'bg-green-100 text-green-700', Intermediate: 'bg-yellow-100 text-yellow-700', Advanced: 'bg-red-100 text-red-700' }
   const formatIcon = t.format === 'Online' ? '💻' : t.format === 'Offline' ? '📍' : '🔗'
-  const pct = Math.round(((t.seats - t.seatsLeft) / t.seats) * 100)
+  const pct = t.seats > 0 ? Math.round(((t.seats - t.seats_left) / t.seats) * 100) : 0
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col">
       <div className="relative h-44 overflow-hidden">
-        <img src={t.image} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={t.image_url} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <span className="absolute top-3 left-3 bg-[#2F2454] text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">{t.category}</span>
         <span className={`absolute top-3 right-3 text-[10px] font-semibold px-2.5 py-1 rounded-full ${levelColor[t.level]}`}>{t.level}</span>
       </div>
       <div className="p-5 flex flex-col flex-1">
         <h3 className="font-bold text-[#2F2454] text-base leading-snug mb-2">{t.title}</h3>
-        <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2">{t.shortDesc}</p>
+        <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2">{t.short_desc}</p>
         <div className="flex flex-col gap-1.5 text-xs text-gray-500 mb-4">
           <div className="flex items-center gap-1.5"><span>📅</span>{t.date}</div>
           <div className="flex items-center gap-1.5"><span>{formatIcon}</span>{t.format} · {t.duration}</div>
@@ -263,7 +272,7 @@ function TrainingCard({ training: t }: { training: Training }) {
         {/* Seats */}
         <div className="mb-4">
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-gray-500">{t.seatsLeft} seats left</span>
+            <span className="text-gray-500">{t.seats_left} seats left</span>
             <span className="font-semibold text-[#2F2454]">{pct}% full</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -272,7 +281,7 @@ function TrainingCard({ training: t }: { training: Training }) {
         </div>
         <div className="flex items-center justify-between mt-auto">
           <span className="font-bold text-[#2F2454] text-sm">
-            {t.price === 'Free' ? <span className="text-green-600">Free</span> : `Rp ${(t.price as number).toLocaleString('id-ID')}`}
+            {t.price === 'Free' ? <span className="text-green-600">Free</span> : `Rp ${Number(t.price).toLocaleString('id-ID')}`}
           </span>
           <Link to={`/training/${t.id}`} className="bg-[#2F2454] text-white text-xs font-semibold px-4 py-2 rounded-full hover:bg-[#A577D5] transition-all">
             View Details

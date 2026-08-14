@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { trainings } from '../data/mockData'
+import { dataService } from '../data/dataService'
 
 const CATEGORIES = ['All', 'Civil Engineering', 'Mechanical Engineering', 'Electrical Engineering', 'QA/QC', 'HSE', 'Project Management']
 const LEVELS = ['All', 'Beginner', 'Intermediate', 'Advanced']
@@ -9,11 +9,20 @@ const FORMATS = ['All', 'Online', 'Offline', 'Hybrid']
 export default function Training() {
   const [params] = useSearchParams()
   const initCat = params.get('category') || 'All'
+  const [trainings, setTrainings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState(CATEGORIES.includes(initCat) ? initCat : 'All')
   const [level, setLevel] = useState('All')
   const [format, setFormat] = useState('All')
   const [priceFilter, setPriceFilter] = useState('All')
+
+  useEffect(() => {
+    dataService.getTrainings()
+      .then(setTrainings)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
   const filtered = useMemo(() => {
     return trainings.filter((t) => {
@@ -72,7 +81,9 @@ export default function Training() {
         </div>
 
         {/* Grid */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20 text-gray-400">Loading training programs...</div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <div className="text-5xl mb-4">🔍</div>
             <p className="font-semibold text-gray-600 text-lg">No training found</p>
@@ -81,12 +92,12 @@ export default function Training() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((t) => {
-              const pct = Math.round(((t.seats - t.seatsLeft) / t.seats) * 100)
+              const pct = t.seats > 0 ? Math.round(((t.seats - t.seats_left) / t.seats) * 100) : 0
               const fmt = t.format === 'Online' ? '💻' : t.format === 'Offline' ? '📍' : '🔗'
               return (
                 <div key={t.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col">
                   <div className="relative h-48 overflow-hidden">
-                    <img src={t.image} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={t.image_url} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     <span className="absolute top-3 left-3 bg-[#2F2454] text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">{t.category}</span>
                     <span className={`absolute top-3 right-3 text-[10px] font-semibold px-2.5 py-1 rounded-full ${levelColor[t.level]}`}>{t.level}</span>
@@ -94,7 +105,7 @@ export default function Training() {
                   </div>
                   <div className="p-5 flex flex-col flex-1">
                     <h3 className="font-bold text-[#2F2454] text-base leading-snug mb-1.5">{t.title}</h3>
-                    <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2">{t.shortDesc}</p>
+                    <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2">{t.short_desc}</p>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-gray-500 mb-4">
                       <div className="flex items-center gap-1.5"><span>📅</span>{t.date}</div>
                       <div className="flex items-center gap-1.5"><span>⏱</span>{t.duration}</div>
@@ -110,7 +121,7 @@ export default function Training() {
                     {/* Seats */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-gray-400">{t.seatsLeft} seats left of {t.seats}</span>
+                        <span className="text-gray-400">{t.seats_left} seats left of {t.seats}</span>
                         <span className="font-semibold text-[#2F2454]">{pct}%</span>
                       </div>
                       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -119,7 +130,7 @@ export default function Training() {
                     </div>
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
                       <span className="font-bold text-[#2F2454]">
-                        {t.price === 'Free' ? <span className="text-green-600 text-sm">Free</span> : <span className="text-sm">Rp {(t.price as number).toLocaleString('id-ID')}</span>}
+                        {t.price === 'Free' ? <span className="text-green-600 text-sm">Free</span> : <span className="text-sm">Rp ${Number(t.price).toLocaleString('id-ID')}</span>}
                       </span>
                       <div className="flex gap-2">
                         <Link to={`/training/${t.id}`} className="border border-[#2F2454] text-[#2F2454] text-xs font-semibold px-3 py-2 rounded-full hover:bg-[#2F2454] hover:text-white transition-all">

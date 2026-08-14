@@ -1,24 +1,29 @@
 import { useState } from 'react'
-
-const VALID_CERTS: Record<string, { name: string; training: string; date: string; certId: string; issueDate: string }> = {
-  'PA-CERT-2026-00142': { name: 'Ahmad Rizky', training: 'Structural Analysis for Civil Engineers', date: 'September 7, 2026', certId: 'PA-CERT-2026-00142', issueDate: 'September 12, 2026' },
-  'PA-CERT-2026-00089': { name: 'Siti Rahayu', training: 'Project Quality Management Training', date: 'July 15, 2026', certId: 'PA-CERT-2026-00089', issueDate: 'July 18, 2026' },
-}
+import { dataService } from '../data/dataService'
 
 export default function VerifyCertificate() {
   const [input, setInput] = useState('')
   const [result, setResult] = useState<'idle' | 'found' | 'notfound'>('idle')
-  const [cert, setCert] = useState<typeof VALID_CERTS[string] | null>(null)
+  const [cert, setCert] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 900))
-    const found = VALID_CERTS[input.trim().toUpperCase()]
-    if (found) { setCert(found); setResult('found') }
-    else { setCert(null); setResult('notfound') }
-    setLoading(false)
+    try {
+      const data = await dataService.verifyCertificate(input.trim().toUpperCase())
+      if (data) {
+        setCert(data)
+        setResult('found')
+      } else {
+        setResult('notfound')
+      }
+    } catch (err) {
+      console.error(err)
+      setResult('notfound')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -62,11 +67,11 @@ export default function VerifyCertificate() {
               </div>
               <div className="space-y-3">
                 {[
-                  ['Participant Name', cert.name],
-                  ['Training', cert.training],
-                  ['Training Date', cert.date],
-                  ['Certificate ID', cert.certId],
-                  ['Issue Date', cert.issueDate],
+                  ['Participant Name', cert.pa_profiles?.full_name],
+                  ['Training', cert.pa_trainings?.title],
+                  ['Training Date', cert.pa_trainings?.date],
+                  ['Certificate ID', cert.id],
+                  ['Issue Date', new Date(cert.issued_at).toLocaleDateString()],
                   ['Issued By', 'Prestigium Academia'],
                 ].map(([l, v]) => (
                   <div key={l as string} className="flex justify-between items-start py-2 border-b border-gray-50 last:border-0">

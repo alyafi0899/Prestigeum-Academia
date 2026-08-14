@@ -1,16 +1,25 @@
-import { useState } from 'react'
-import { galleryItems } from '../data/mockData'
+import { useState, useEffect } from 'react'
+import { dataService } from '../data/dataService'
 
 const CATEGORIES = ['All', 'Training', 'Workshop', 'Seminar', 'Engineering Activities', 'Community', 'Events']
 
 export default function Gallery() {
   const [cat, setCat] = useState('All')
-  const [lightbox, setLightbox] = useState<typeof galleryItems[number] | null>(null)
+  const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [lightbox, setLightbox] = useState<any | null>(null)
   const [lbIndex, setLbIndex] = useState(0)
 
-  const filtered = cat === 'All' ? galleryItems : galleryItems.filter((g) => g.category === cat)
+  useEffect(() => {
+    dataService.getGallery()
+      .then(setItems)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
-  const openLightbox = (item: typeof galleryItems[number]) => {
+  const filtered = cat === 'All' ? items : items.filter((g) => g.category === cat)
+
+  const openLightbox = (item: any) => {
     setLightbox(item)
     setLbIndex(filtered.indexOf(item))
   }
@@ -42,19 +51,23 @@ export default function Gallery() {
         </div>
 
         {/* Masonry grid */}
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-          {filtered.map((item, i) => (
-            <div key={item.id} className="break-inside-avoid cursor-pointer group relative overflow-hidden rounded-2xl shadow-sm border border-gray-100" onClick={() => openLightbox(item)}>
-              <img src={item.image} alt={item.title} className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-48' : 'h-56'}`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2F2454]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wide">{item.category}</span>
-                <p className="text-white font-semibold text-sm">{item.title}</p>
-                <p className="text-white/70 text-xs">{item.date}</p>
+        {loading ? (
+          <div className="text-center py-20 text-gray-400">Loading gallery...</div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+            {filtered.map((item, i) => (
+              <div key={item.id} className="break-inside-avoid cursor-pointer group relative overflow-hidden rounded-2xl shadow-sm border border-gray-100" onClick={() => openLightbox(item)}>
+                <img src={item.image_url} alt={item.title} className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-48' : 'h-56'}`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2F2454]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wide">{item.category}</span>
+                  <p className="text-white font-semibold text-sm">{item.title}</p>
+                  <p className="text-white/70 text-xs">{item.date}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
@@ -70,7 +83,7 @@ export default function Gallery() {
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 4l5 5-5 5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           <div onClick={(e) => e.stopPropagation()} className="max-w-3xl w-full">
-            <img src={lightbox.image} alt={lightbox.title} className="w-full max-h-[70vh] object-contain rounded-2xl" />
+            <img src={lightbox.image_url} alt={lightbox.title} className="w-full max-h-[70vh] object-contain rounded-2xl" />
             <div className="text-center mt-4">
               <span className="text-cyan-400 text-xs font-semibold">{lightbox.category}</span>
               <p className="text-white font-bold mt-1">{lightbox.title}</p>
