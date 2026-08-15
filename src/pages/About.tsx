@@ -11,6 +11,37 @@ const stats = [
 ]
 
 export default function About() {
+  const [statsData, setStatsData] = useState({ participants: 0, events: 0, instructors: 0, certificates: 0 })
+  const [instructorsList, setInstructorsList] = useState<any[]>([])
+
+  useEffect(() => {
+    dataService.getSummaryStats().then(setStatsData).catch(console.error)
+
+    // Fetch unique instructors from trainings
+    dataService.getTrainings().then(trainings => {
+      const unique = Array.from(new Set(trainings.map((t: any) => t.instructor))).map(name => {
+        const t = trainings.find((tr: any) => tr.instructor === name)
+        return {
+          id: name,
+          name: name,
+          title: t.instructor_title || 'Expert Instructor',
+          company: 'Prestigium Academia',
+          image: t.instructor_image_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=400',
+          experience: t.instructor_experience || '10+ Years',
+          bio: t.instructor_bio || 'Certified industry professional with extensive project experience.'
+        }
+      })
+      setInstructorsList(unique)
+    }).catch(console.error)
+  }, [])
+
+  const stats = [
+    { value: `${statsData.participants.toLocaleString()}+`, label: 'Participants' },
+    { value: `${statsData.events.toLocaleString()}+`, label: 'Training Events' },
+    { value: `${statsData.instructors.toLocaleString()}+`, label: 'Expert Instructors' },
+    { value: `${statsData.certificates.toLocaleString()}+`, label: 'Certificates Issued' },
+  ]
+
   return (
     <div className="bg-white">
       {/* Hero */}
@@ -109,7 +140,7 @@ export default function About() {
             <h2 className="text-[#2F2454] text-3xl font-bold">Professional Instructors</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {instructors.map((ins) => (
+            {instructorsList.map((ins) => (
               <div key={ins.id} className="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm hover:shadow-lg transition-all group">
                 <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4">
                   <img src={ins.image} alt={ins.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -121,6 +152,7 @@ export default function About() {
                 <p className="text-gray-500 text-xs mt-3 leading-relaxed line-clamp-3">{ins.bio}</p>
               </div>
             ))}
+            {instructorsList.length === 0 && <p className="col-span-full text-center text-gray-400">Loading instructor profiles...</p>}
           </div>
         </div>
 
