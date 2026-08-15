@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../context/AuthContext'
+import logo from '../assets/logo.png'
 
 type View = 'login' | 'register' | 'forgot'
 
@@ -69,7 +70,7 @@ export default function Login() {
         <img src="https://images.unsplash.com/photo-1774599730806-61591b84280e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=900" alt="" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40" />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src="/src/assets/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
             <div className="text-white font-semibold">
               <div>Prestigium Academia</div>
             </div>
@@ -95,7 +96,7 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex items-center gap-2.5">
-            <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
             <span className="font-bold text-[#2F2454]">Prestigium Academia</span>
           </div>
 

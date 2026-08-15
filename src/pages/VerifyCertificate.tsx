@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { dataService } from '../data/dataService'
+import logo from '../assets/logo.png'
 
 export default function VerifyCertificate() {
   const [input, setInput] = useState('')
@@ -31,7 +32,7 @@ export default function VerifyCertificate() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <img src="/src/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
           </div>
           <h1 className="text-[#2F2454] text-3xl font-bold mb-2">Certificate Verification</h1>
           <p className="text-gray-500 text-sm">Enter a Certificate ID to verify its authenticity.</p>

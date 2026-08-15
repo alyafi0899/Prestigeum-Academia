@@ -1,5 +1,7 @@
 import { Link } from 'react-router'
-import { instructors } from '../data/mockData'
+import { dataService } from '../data/dataService'
+import { useState, useEffect } from 'react'
+import logo from '../assets/logo.png'
 
 const stats = [
   { value: '1,239+', label: 'Participants' },
@@ -15,7 +17,7 @@ export default function About() {
       <div className="bg-gradient-to-br from-[#2F2454] to-[#5b3d9e] px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src="/src/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
             <div className="text-white text-left">
               <p className="font-bold text-xl">Prestigium Academia</p>
               <p className="text-white/60 text-sm">Engineering Education Platform</p>

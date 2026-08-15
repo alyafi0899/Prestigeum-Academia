@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router'
 import { dataService } from '../data/dataService'
+import logo from '../assets/logo.png'
+import hero01 from '../assets/hero01.png'
 
 // We will fetch trainings from Supabase
 // const slides and other constants remain the same
@@ -8,7 +10,7 @@ import { dataService } from '../data/dataService'
 const slides = [
   {
     id: 0,
-    image: '/src/assets/hero01.png',
+    image: hero01,
     tag: 'Engineering Excellence',
     headline: 'Master Engineering Skills for the Future',
     accent: 'Future',
@@ -116,7 +118,7 @@ export default function Home() {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(108deg, rgba(47,36,84,0.93) 0%, rgba(100,50,160,0.72) 45%, rgba(165,119,213,0.25) 75%, rgba(47,36,84,0.6) 100%)' }} />
             {/* Brand A watermark */}
             <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: '38%', maxWidth: 520, opacity: 0.15 }}>
-              <img src="/src/assets/logo.png" alt="" className="w-full h-auto grayscale brightness-200" />
+              <img src={logo} alt="" className="w-full h-auto grayscale brightness-200" />
             </div>
           </div>
         ))}

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { dataService } from '../data/dataService'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import QRCode from 'qrcode'
+import logo from '../assets/logo.png'
 
 export default function Dashboard() {
   const { user, loading: authLoading, logout } = useAuth()
@@ -324,7 +325,7 @@ export default function Dashboard() {
             <div className="border-4 border-[#2F2454] rounded-2xl p-6 bg-gradient-to-br from-[#F2EFFD] to-white text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#2F2454] to-[#A577D5]" />
               <div className="flex items-center justify-center gap-2 mb-4">
-                <img src="/src/assets/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+                <img src={logo} alt="Logo" className="w-6 h-6 object-contain" />
                 <span className="text-[#2F2454] font-bold text-sm">Prestigium Academia</span>
               </div>
               <p className="text-gray-400 text-xs tracking-widest uppercase mb-2">Certificate of Completion</p>

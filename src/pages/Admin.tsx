@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import { dataService } from '../data/dataService'
+import logo from '../assets/logo.png'
 
 type AdminSection = 'dashboard' | 'events' | 'participants' | 'registrations' | 'attendance' | 'certificates' | 'articles' | 'gallery' | 'settings'
 
@@ -221,7 +222,7 @@ export default function Admin() {
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 bg-[#2F2454] flex flex-col shrink-0 overflow-hidden`}>
         <div className="p-6 flex items-center gap-4 border-b border-white/10">
-          <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           {sidebarOpen && <div className="text-white text-sm font-bold leading-tight truncate"><div>Prestigium</div><div className="text-white/50">Academia</div></div>}
         </div>
         <div className="p-3 flex-1 space-y-1">
