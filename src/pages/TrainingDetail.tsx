@@ -76,6 +76,11 @@ export default function TrainingDetail() {
 
             {activeTab === 'overview' && (
               <div className="space-y-7">
+                {training.flyer_url && (
+                  <div className="rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+                    <img src={training.flyer_url} alt="Event Flyer" className="w-full h-auto" />
+                  </div>
+                )}
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                   <h3 className="font-bold text-[#2F2454] text-lg mb-3">About This Training</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{training.description}</p>
@@ -141,14 +146,15 @@ export default function TrainingDetail() {
               <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-[#2F2454] text-lg mb-5">Meet Your Instructor</h3>
                 <div className="flex flex-col md:flex-row gap-5">
-                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=400" alt={training.instructor} className="w-24 h-24 rounded-2xl object-cover shrink-0" />
+                  <img src={training.instructor_image_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=400"} alt={training.instructor} className="w-24 h-24 rounded-2xl object-cover shrink-0" />
                   <div>
                     <p className="font-bold text-[#2F2454] text-base">{training.instructor}</p>
                     <p className="text-[#A577D5] text-sm font-medium">{training.instructor_title}</p>
                     <div className="flex flex-wrap gap-3 mt-3">
-                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">Engineering Specialist</span>
-                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">15+ Years Experience</span>
+                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">{training.instructor_specialization || 'Engineering Specialist'}</span>
+                      <span className="bg-[#F2EFFD] text-[#2F2454] text-xs font-semibold px-3 py-1 rounded-full">{training.instructor_experience || '15+ Years'} Experience</span>
                     </div>
+                    <p className="text-gray-600 text-sm leading-relaxed mt-4">{training.instructor_bio}</p>
                   </div>
                 </div>
               </div>

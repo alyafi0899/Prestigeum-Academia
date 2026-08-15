@@ -15,10 +15,7 @@ export default function About() {
       <div className="bg-gradient-to-br from-[#2F2454] to-[#5b3d9e] px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <svg width="48" height="48" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="white"/>
-              <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5"/>
-            </svg>
+            <img src="/src/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
             <div className="text-white text-left">
               <p className="font-bold text-xl">Prestigium Academia</p>
               <p className="text-white/60 text-sm">Engineering Education Platform</p>

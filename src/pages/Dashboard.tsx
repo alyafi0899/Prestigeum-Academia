@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../context/AuthContext'
 import { dataService } from '../data/dataService'
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+import QRCode from 'qrcode'
 
 export default function Dashboard() {
   const { user, loading: authLoading, logout } = useAuth()
@@ -77,6 +79,65 @@ export default function Dashboard() {
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
     setHasDrawn(false)
     setSigned(false)
+  }
+
+  const downloadCertificate = async (reg: any) => {
+    try {
+      console.log('Starting certificate generation...')
+      const templateUrl = reg.pa_trainings.cert_template_url
+      if (!templateUrl) {
+        alert('No PDF template found for this event. Please contact admin.')
+        return
+      }
+
+      const existingPdfBytes = await fetch(templateUrl).then(res => res.arrayBuffer())
+      const pdfDoc = await PDFDocument.load(existingPdfBytes)
+      const pages = pdfDoc.getPages()
+      const firstPage = pages[0]
+      const { width, height } = firstPage.getSize()
+
+      const certId = `PA-CERT-2026-${reg.id.slice(0, 5)}`.toUpperCase()
+      const qrDataUrl = await QRCode.toDataURL(`${window.location.origin}/verify-certificate?id=${certId}`)
+      const qrImageBytes = await fetch(qrDataUrl).then(res => res.arrayBuffer())
+      const qrImage = await pdfDoc.embedPng(qrImageBytes)
+
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+      const name = user!.name.toUpperCase()
+      const nameWidth = font.widthOfTextAtSize(name, 30)
+
+      firstPage.drawText(name, {
+        x: width / 2 - nameWidth / 2,
+        y: reg.pa_trainings.cert_name_y || (height / 2 + 10),
+        size: 30,
+        font,
+        color: rgb(0.18, 0.14, 0.33),
+      })
+
+      firstPage.drawImage(qrImage, {
+        x: reg.pa_trainings.cert_qr_x || (width - 110),
+        y: reg.pa_trainings.cert_qr_y || 40,
+        width: 70,
+        height: 70,
+      })
+
+      firstPage.drawText(`ID: ${certId}`, {
+        x: reg.pa_trainings.cert_qr_x || (width - 110),
+        y: (reg.pa_trainings.cert_qr_y || 40) - 10,
+        size: 7,
+        font,
+        color: rgb(0.4, 0.4, 0.4),
+      })
+
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `Certificate_${user!.name.replace(/\s+/g, '_')}.pdf`
+      link.click()
+    } catch (err: any) {
+      console.error(err)
+      alert('Error generating certificate. Ensure the PDF link is valid and allows cross-origin requests.')
+    }
   }
 
   const stats = [
@@ -178,9 +239,14 @@ export default function Dashboard() {
                     Open Training
                   </Link>
                   {r.status === 'Completed' && (
-                    <button onClick={() => { setSelectedCert(r); setShowCert(true) }} className="text-xs font-semibold text-white bg-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-all">
-                      View Certificate
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setSelectedCert(r); setShowCert(true) }} className="text-xs font-semibold text-white bg-yellow-500 px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-all">
+                        Preview
+                      </button>
+                      <button onClick={() => downloadCertificate(r)} className="text-xs font-semibold text-white bg-green-600 px-3 py-1.5 rounded-lg hover:bg-green-700 transition-all">
+                        PDF
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -258,10 +324,7 @@ export default function Dashboard() {
             <div className="border-4 border-[#2F2454] rounded-2xl p-6 bg-gradient-to-br from-[#F2EFFD] to-white text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#2F2454] to-[#A577D5]" />
               <div className="flex items-center justify-center gap-2 mb-4">
-                <svg width="24" height="24" viewBox="0 0 36 36" fill="none">
-                  <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="#2F2454"/>
-                  <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5"/>
-                </svg>
+                <img src="/src/assets/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
                 <span className="text-[#2F2454] font-bold text-sm">Prestigium Academia</span>
               </div>
               <p className="text-gray-400 text-xs tracking-widest uppercase mb-2">Certificate of Completion</p>
@@ -283,7 +346,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex gap-3 mt-4">
-              <button className="flex-1 bg-[#2F2454] text-white text-sm font-semibold py-3 rounded-xl hover:bg-[#A577D5] transition-all">Download PDF</button>
+              <button onClick={() => downloadCertificate(selectedCert)} className="flex-1 bg-[#2F2454] text-white text-sm font-semibold py-3 rounded-xl hover:bg-[#A577D5] transition-all">Download PDF</button>
               <Link to="/verify-certificate" onClick={() => setShowCert(false)} className="flex-1 border border-[#2F2454] text-[#2F2454] text-sm font-semibold py-3 rounded-xl text-center hover:bg-[#F2EFFD] transition-all">Verify</Link>
             </div>
           </div>

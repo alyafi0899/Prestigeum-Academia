@@ -58,11 +58,12 @@ export default function Gallery() {
             {filtered.map((item, i) => (
               <div key={item.id} className="break-inside-avoid cursor-pointer group relative overflow-hidden rounded-2xl shadow-sm border border-gray-100" onClick={() => openLightbox(item)}>
                 <img src={item.image_url} alt={item.title} className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${i % 3 === 0 ? 'h-64' : i % 3 === 1 ? 'h-48' : 'h-56'}`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2F2454]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wide">{item.category}</span>
-                  <p className="text-white font-semibold text-sm">{item.title}</p>
-                  <p className="text-white/70 text-xs">{item.date}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2F2454]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{item.category}</span>
+                  <p className="text-white font-bold text-base mt-1">{item.title}</p>
+                  <p className="text-white/70 text-xs line-clamp-2 mt-1">{item.caption}</p>
+                  <p className="text-white/40 text-[10px] uppercase font-bold mt-2 tracking-tighter">{item.date}</p>
                 </div>
               </div>
             ))}

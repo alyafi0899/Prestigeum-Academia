@@ -8,7 +8,7 @@ import { dataService } from '../data/dataService'
 const slides = [
   {
     id: 0,
-    image: 'https://images.unsplash.com/photo-1774599730806-61591b84280e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1920',
+    image: '/src/assets/hero01.png',
     tag: 'Engineering Excellence',
     headline: 'Master Engineering Skills for the Future',
     accent: 'Future',
@@ -71,12 +71,22 @@ export default function Home() {
   const [current, setCurrent] = useState(0)
   const [fading, setFading] = useState(false)
   const [featured, setFeatured] = useState<any[]>([])
+  const [liveStats, setLiveStats] = useState({ participants: 0, events: 0, instructors: 0, certificates: 0 })
 
   useEffect(() => {
     dataService.getTrainings().then(data => {
       setFeatured(data.slice(0, 3))
     }).catch(console.error)
+
+    dataService.getSummaryStats().then(setLiveStats).catch(console.error)
   }, [])
+
+  const stats = [
+    { value: `${liveStats.participants.toLocaleString()}+`, label: 'Registered Participants' },
+    { value: `${liveStats.events.toLocaleString()}+`, label: 'Training Events' },
+    { value: `${liveStats.instructors.toLocaleString()}+`, label: 'Expert Instructors' },
+    { value: `${liveStats.certificates.toLocaleString()}+`, label: 'Certificates Issued' },
+  ]
 
   const go = useCallback((index: number) => {
     setFading(true)
@@ -106,7 +116,7 @@ export default function Home() {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(108deg, rgba(47,36,84,0.93) 0%, rgba(100,50,160,0.72) 45%, rgba(165,119,213,0.25) 75%, rgba(47,36,84,0.6) 100%)' }} />
             {/* Brand A watermark */}
             <div className="absolute bottom-0 right-0 pointer-events-none" style={{ width: '38%', maxWidth: 520, opacity: 0.15 }}>
-              <svg viewBox="0 0 400 480" fill="none"><path d="M200 0 L400 480 H280 L200 260 L120 480 H0 L200 0Z" fill="white"/><path d="M140 320 H260 L240 370 H160 Z" fill="#2F2454"/></svg>
+              <img src="/src/assets/logo.png" alt="" className="w-full h-auto grayscale brightness-200" />
             </div>
           </div>
         ))}

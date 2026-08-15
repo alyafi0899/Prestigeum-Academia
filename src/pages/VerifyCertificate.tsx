@@ -31,10 +31,7 @@ export default function VerifyCertificate() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="#2F2454"/>
-              <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5"/>
-            </svg>
+            <img src="/src/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
           </div>
           <h1 className="text-[#2F2454] text-3xl font-bold mb-2">Certificate Verification</h1>
           <p className="text-gray-500 text-sm">Enter a Certificate ID to verify its authenticity.</p>

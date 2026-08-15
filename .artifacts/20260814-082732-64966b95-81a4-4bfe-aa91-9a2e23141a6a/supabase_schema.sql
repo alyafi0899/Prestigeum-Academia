@@ -1,5 +1,5 @@
--- PRESTIGEUM ACADEMIA - DATABASE SCHEMA
--- This script sets up tables with the 'pa_' prefix to avoid conflicts.
+-- PRESTIGEUM ACADEMIA - FULL DATABASE SCHEMA
+-- This script contains the finalized tables, columns, and logic synchronized with the latest app code.
 
 -- 1. PROFILES (Extends Supabase Auth)
 CREATE TABLE IF NOT EXISTS pa_profiles (
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS pa_profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- 2. TRAININGS (Events)
+-- 2. TRAININGS (Comprehensive Event Data)
 CREATE TABLE IF NOT EXISTS pa_trainings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
@@ -24,18 +24,23 @@ CREATE TABLE IF NOT EXISTS pa_trainings (
   location TEXT,
   instructor TEXT,
   instructor_title TEXT,
+  instructor_image_url TEXT,
+  instructor_specialization TEXT,
+  instructor_experience TEXT,
+  instructor_bio TEXT,
   seats INTEGER DEFAULT 0,
   seats_left INTEGER DEFAULT 0,
-  price TEXT, -- Stored as text to handle 'Free' or numbers
+  max_participants INTEGER DEFAULT 0,
+  price TEXT,
   deadline TEXT,
-  image_url TEXT,
+  image_url TEXT, -- Hero Banner
+  flyer_url TEXT, -- Poster Image
   description TEXT,
   short_desc TEXT,
   language TEXT DEFAULT 'Indonesian',
-  max_participants INTEGER DEFAULT 0,
-  objectives JSONB DEFAULT '[]',
-  modules JSONB DEFAULT '[]',
   target_audience TEXT,
+  objectives JSONB DEFAULT '[]', -- List of strings
+  modules JSONB DEFAULT '[]', -- List of objects {title, desc, duration, outcomes:[]}
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -47,7 +52,7 @@ CREATE TABLE IF NOT EXISTS pa_registrations (
   status TEXT DEFAULT 'Registered', -- 'Registered', 'Confirmed', 'Completed', 'Cancelled'
   attendance_status TEXT DEFAULT 'Pending', -- 'Pending', 'Attended', 'Absent'
   check_in_time TIMESTAMP WITH TIME ZONE,
-  signature_url TEXT, -- URL to signature image in storage
+  signature_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   UNIQUE(user_id, training_id)
 );
@@ -86,7 +91,7 @@ CREATE TABLE IF NOT EXISTS pa_certificates (
   verification_url TEXT
 );
 
--- 7. FUNCTION: Deduct Seat
+-- 7. FUNCTION: Deduct Seat (Atomic)
 CREATE OR REPLACE FUNCTION pa_deduct_seat(t_id UUID)
 RETURNS void AS $$
 BEGIN
@@ -110,7 +115,18 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- RLS (Row Level Security) - Basic Setup
+-- 9. HELPER: Check Admin Role
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM pa_profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 10. RLS POLICIES (Row Level Security)
 ALTER TABLE pa_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pa_trainings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pa_registrations ENABLE ROW LEVEL SECURITY;
@@ -118,16 +134,22 @@ ALTER TABLE pa_articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pa_gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pa_certificates ENABLE ROW LEVEL SECURITY;
 
--- Allow public read to articles, gallery, and trainings
-CREATE POLICY "Public Read Trainings" ON pa_trainings FOR SELECT USING (true);
-CREATE POLICY "Public Read Articles" ON pa_articles FOR SELECT USING (true);
-CREATE POLICY "Public Read Gallery" ON pa_gallery FOR SELECT USING (true);
-CREATE POLICY "Public Read Certificates" ON pa_certificates FOR SELECT USING (true);
+-- Public Select
+CREATE POLICY "Public select" ON pa_trainings FOR SELECT USING (true);
+CREATE POLICY "Public select" ON pa_articles FOR SELECT USING (true);
+CREATE POLICY "Public select" ON pa_gallery FOR SELECT USING (true);
+CREATE POLICY "Public select" ON pa_certificates FOR SELECT USING (true);
 
--- Profiles: Users can view their own, Admin can view all
-CREATE POLICY "Users can view own profile" ON pa_profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON pa_profiles FOR UPDATE USING (auth.uid() = id);
+-- User Profiles & Registrations
+CREATE POLICY "Users view own profile" ON pa_profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users update own profile" ON pa_profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users view own registrations" ON pa_registrations FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users create own registrations" ON pa_registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Registrations: Users can view/create their own
-CREATE POLICY "Users can view own registrations" ON pa_registrations FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can create own registrations" ON pa_registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Admin Full Access (Using is_admin helper)
+CREATE POLICY "Admin write trainings" ON pa_trainings FOR ALL USING (is_admin());
+CREATE POLICY "Admin write articles" ON pa_articles FOR ALL USING (is_admin());
+CREATE POLICY "Admin write gallery" ON pa_gallery FOR ALL USING (is_admin());
+CREATE POLICY "Admin manage registrations" ON pa_registrations FOR ALL USING (is_admin());
+CREATE POLICY "Admin manage certificates" ON pa_certificates FOR ALL USING (is_admin());
+CREATE POLICY "Admin view profiles" ON pa_profiles FOR SELECT USING (is_admin());

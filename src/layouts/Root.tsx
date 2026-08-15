@@ -49,10 +49,7 @@ export default function Root() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="white" />
-              <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5" />
-            </svg>
+            <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
             <div className="text-white font-semibold text-sm leading-tight">
               <div>Prestigium</div>
               <div className="text-white/70">Academia</div>
@@ -207,10 +204,7 @@ export default function Root() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
             <div className="md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
-                <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-                  <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="white" />
-                  <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5" />
-                </svg>
+                <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
                 <div className="font-semibold text-sm">
                   <div>Prestigium</div>
                   <div className="text-white/60">Academia</div>

@@ -69,10 +69,7 @@ export default function Login() {
         <img src="https://images.unsplash.com/photo-1774599730806-61591b84280e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=900" alt="" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40" />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link to="/" className="flex items-center gap-2.5">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="white" />
-              <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5" />
-            </svg>
+            <img src="/src/assets/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
             <div className="text-white font-semibold">
               <div>Prestigium Academia</div>
             </div>
@@ -98,10 +95,7 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex items-center gap-2.5">
-            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 L34 34 H24 L18 18 L12 34 H2 L18 2Z" fill="#2F2454" />
-              <path d="M11 26 H25 L23 30 H13 Z" fill="#A577D5" />
-            </svg>
+            <img src="/src/assets/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
             <span className="font-bold text-[#2F2454]">Prestigium Academia</span>
           </div>
 

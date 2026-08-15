@@ -22,7 +22,7 @@ export const dataService = {
     return data
   },
 
-  async createTraining(training: Partial<Training>) {
+  async createTraining(training: Partial<any>) {
     const { data, error } = await supabase
       .from('pa_trainings')
       .insert([training])
@@ -223,5 +223,25 @@ export const dataService = {
     await this.updateRegistration(cert.registration_id, { status: 'Completed' })
 
     return certData
+  },
+
+  // Stats for Homepage
+  async getSummaryStats() {
+    const [profiles, trainings, certs] = await Promise.all([
+      supabase.from('pa_profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('pa_trainings').select('*', { count: 'exact', head: true }),
+      supabase.from('pa_certificates').select('*', { count: 'exact', head: true })
+    ])
+
+    // For instructors, let's count unique instructors from trainings
+    const { data: instructors } = await supabase.from('pa_trainings').select('instructor')
+    const uniqueInstructors = new Set(instructors?.map(i => i.instructor)).size
+
+    return {
+      participants: profiles.count || 0,
+      events: trainings.count || 0,
+      certificates: certs.count || 0,
+      instructors: uniqueInstructors || 0
+    }
   }
 }
